@@ -1,0 +1,21 @@
+﻿  MyObj.c
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj.c(205,52): warning C4244:  “=”: 从“double”转换到“GLfloat”，可能丢失数据
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj.c(229,50): warning C4244:  “=”: 从“double”转换到“GLfloat”，可能丢失数据
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj.c(236,12): warning C4477:  “printf”: 格式字符串“%u”需要类型“unsigned int”的参数，但可变参数 1 拥有了类型“unsigned __int64”
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj.c(236,12): message :  请考虑在格式字符串中使用“%llu”
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj.c(236,12): message :  请考虑在格式字符串中使用“%Iu”
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj.c(236,12): message :  请考虑在格式字符串中使用“%I64u”
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj.c(260,38): warning C4047:  “函数”:“int *”与“int”的间接级别不同
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj.c(260,38): warning C4024:  “getDataNum”: 形参和实参 2 的类型不同
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj.c(260,54): warning C4047:  “函数”:“int *”与“int”的间接级别不同
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj.c(260,54): warning C4024:  “getDataNum”: 形参和实参 3 的类型不同
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj.c(260,70): warning C4047:  “函数”:“int *”与“int”的间接级别不同
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj.c(260,70): warning C4024:  “getDataNum”: 形参和实参 4 的类型不同
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj.c(260,85): warning C4047:  “函数”:“int *”与“int”的间接级别不同
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj.c(260,85): warning C4024:  “getDataNum”: 形参和实参 5 的类型不同
+  正在生成代码
+  1 of 21 functions ( 4.8%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    1 functions had inline decision re-evaluated but remain unchanged
+  已完成代码的生成
+  OpenGLESTest.vcxproj -> D:\OpenGLES3\OpenGLESTest\x64\Release\OpenGLESTest.exe
