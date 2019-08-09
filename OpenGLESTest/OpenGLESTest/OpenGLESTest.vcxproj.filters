@@ -21,7 +21,7 @@
     <ClInclude Include="Common\Include\esUtil_win.h">
       <Filter>Common\Include</Filter>
     </ClInclude>
-    <ClInclude Include="myMath.h">
+    <ClInclude Include="myUtil.h">
       <Filter>Common\Include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -40,6 +40,9 @@
     </ClCompile>
     <ClCompile Include="Common\Source\Win32\esUtil_win32.c">
       <Filter>Common\Source\Win32</Filter>
+    </ClCompile>
+    <ClCompile Include="myUtil.c">
+      <Filter>Common\Source</Filter>
     </ClCompile>
     <ClCompile Include="MyObj.c">
       <Filter>Common\Source</Filter>

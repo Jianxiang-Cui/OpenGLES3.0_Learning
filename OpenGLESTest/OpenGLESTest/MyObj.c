@@ -41,6 +41,7 @@
 #include <string.h>
 #include <math.h>
 #include "esUtil.h"
+#include "myUtil.h"
 
 #define PI 3.14159265
 
@@ -66,6 +67,7 @@ struct
 	int vn_num;
 	int f_num;
 	int* face_counts; // [3,3,3,3,3,4,4,4,4,3...]
+	int updated_face_num;
 
 	GLfloat** vArr; //存放点的二维数组
 	GLfloat** vnArr; //存放法线的二维数组
@@ -87,16 +89,7 @@ struct
 	ESMatrix  mvpMatrix;
 } CameraData;
 
-void VecMatMultiply3(GLfloat* vec3, const ESMatrix3 mat3)
-{
-	GLfloat vecNew[3];
-	vecNew[0] = vec3[0] * mat3.m[0][0] + vec3[1] * mat3.m[1][0] + vec3[2] * mat3.m[2][0];
-	vecNew[1] = vec3[0] * mat3.m[0][1] + vec3[1] * mat3.m[1][1] + vec3[2] * mat3.m[2][1];
-	vecNew[2] = vec3[0] * mat3.m[0][2] + vec3[1] * mat3.m[1][2] + vec3[2] * mat3.m[2][2];
-	vec3[0] = vecNew[0];
-	vec3[1] = vecNew[1];
-	vec3[2] = vecNew[2];
-}
+
 
 ///
 // Create a shader object, load the shader source, and
@@ -209,6 +202,7 @@ int LoadDataFromFile(const char* filename)
 	ObjData.fnArr = (int**)malloc(sizeof(int*) * ObjData.f_num);
 	for (int i = 0; i < ObjData.f_num; i++)
 	{
+		// for the "f" part of ailian.obj, the max num of vertex an f contain is 4
 		ObjData.fvArr[i] = (int*)malloc(sizeof(int) * 4);
 		ObjData.fnArr[i] = (int*)malloc(sizeof(int) * 4);
 	}
@@ -282,7 +276,6 @@ int LoadDataFromFile(const char* filename)
 				int face_count = 0; // 0--"3" 1--"13" 2--"5"
 				if (count > 0)
 				{
-					
 					char* face_token = NULL;
 					char* face_next_token = NULL;
 					face_token = strtok_s(token, "/", &face_next_token);
@@ -313,6 +306,8 @@ int LoadDataFromFile(const char* filename)
 				count++;
 				printf("\n");
 			}
+
+			ObjData.face_counts[fRow] = count - 1;
 			fRow++;
 		}
 		printf("count: %d\n\n\n", count);
@@ -335,13 +330,38 @@ void transVArr(const GLfloat** source, GLfloat* ret)
 	}
 }
 
+// [[7,1,5,N],     [7,1,5,
+//  [5,1,3,7], -->  5,1,3, 5,3,7,
+//  [4,8,6,N]]      4,8,6]
 void transFvArr(const int** source, GLuint* ret)
 {
-	for (int i = 0; i < ObjData.f_num; i++)
+	int row = 0;
+	int capacity = ObjData.face_counts[row];
+	int ret_index = 0;
+
+	// ret_index < 3 * ObjData.updated_face_num
+	for (; row < ObjData.f_num; row++, capacity += ObjData.face_counts[row])
 	{
-		for (int j = 0; j < 3; j++)
+		if (ObjData.face_counts[row] == 3) // [7,1,5,N]
 		{
-			ret[i * 3 + j] = source[i][j]-1;
+			for (int i = 0; i < 3; i++, ret_index++)
+			{
+				ret[ret_index] = source[row][i] - 1;
+			}
+		}
+		else if (ObjData.face_counts[row] == 4) // [5,1,3,7] --> [5,1,3, 5,3,7]
+		{
+			for (int i = 0; i < 3; i++, ret_index++) // [5,1,3]
+			{
+				ret[ret_index] = source[row][i] - 1;
+			}
+			// [5,3,7]
+			ret[ret_index] = source[row][0] - 1;
+			ret_index++;
+			ret[ret_index] = source[row][2] - 1;
+			ret_index++;
+			ret[ret_index] = source[row][3] - 1;
+			ret_index++;
 		}
 	}
 }
@@ -352,25 +372,40 @@ void transFvArr(const int** source, GLuint* ret)
 int Init(ESContext* esContext)
 {
 	// init ObjData
-	const char* filename = "cube.obj";
+
+	const char* filename = "ailian.obj";
 	getDataNum(filename, ObjData.v_num, ObjData.vt_num, ObjData.vn_num, ObjData.f_num);
 	ObjData.vertices = malloc(sizeof(GLfloat) * 3 * ObjData.v_num);
-	ObjData.indices = malloc(sizeof(GLuint) * 3 * ObjData.f_num);
+	
 	ObjData.face_counts = malloc(sizeof(int) * ObjData.f_num);
+
 	LoadDataFromFile(filename);
+	ObjData.updated_face_num = updatedFaceNum(ObjData.face_counts, ObjData.f_num);
+	ObjData.indices = malloc(sizeof(GLuint) * 3 * ObjData.updated_face_num);
+
 	transVArr(ObjData.vArr, ObjData.vertices);
 	transFvArr(ObjData.fvArr, ObjData.indices);
 
-	for (int i = 0; i < ObjData.v_num; i++)
+	
+
+	// print out data for testing
+
+	for (int i = 0; i < ObjData.updated_face_num; i++)
 	{
 		for (int j = 0; j < 3; j++)
 		{
-			printf("%f\t", ObjData.vertices[i*3+j]);
+			printf("%d\t", ObjData.indices[i*3+j]);
 		}
 		printf("\n");
 	}
+	/*for (int i = 0; i < ObjData.f_num; i++)
+	{
+		printf("%d\n", ObjData.face_counts[i]);
+	}*/
 	//printf("%d", ObjData.f_num);
 	//printf("v_num: %d\nvt_num: %d\nvu_num: %d\nf_num: %d\n", ObjData.v_num, ObjData.vt_num, ObjData.vn_num, ObjData.f_num);
+
+
 
 
 	// init CameraData
@@ -382,11 +417,11 @@ int Init(ESContext* esContext)
 	CameraData.up[2] = 0.0f;
 	CameraData.eye = malloc(sizeof(float) * 3);
 	CameraData.eye[0] = 0.0f;
-	CameraData.eye[1] = 0.0f;
-	CameraData.eye[2] = 5.0f;
+	CameraData.eye[1] = 80.0f;
+	CameraData.eye[2] = 200.0f;
 	CameraData.target = malloc(sizeof(float) * 3);
 	CameraData.target[0] = 0.0f;
-	CameraData.target[1] = 0.0f;
+	CameraData.target[1] = 80.0f;
 	CameraData.target[2] = 0.0f;
 	CameraData.lookAt = malloc(sizeof(float) * 3);
 
@@ -474,30 +509,6 @@ int Init(ESContext* esContext)
 	return TRUE;
 }
 
-void Rotate(GLfloat* eye, GLfloat angle)
-{
-	// rotate along y axis mat
-	ESMatrix3 mat3;
-	mat3.m[0][0] = cos(angle * PI / 180.0f);
-	mat3.m[0][1] = 0.0f;
-	mat3.m[0][2] = -sin(angle * PI / 180.0f);
-	mat3.m[1][0] = 0.0f;
-	mat3.m[1][1] = 1.0f;
-	mat3.m[1][2] = 0.0f;
-	mat3.m[2][0] = sin(angle * PI / 180.0f);
-	mat3.m[2][1] = 0.0f;
-	mat3.m[2][2] = cos(angle * PI / 180.0f);
-
-	VecMatMultiply3(eye, mat3);
-
-}
-
-void Redirection(GLfloat* lookAt, const GLfloat* target, const GLfloat* eye)
-{
-	lookAt[0] = target[0] - eye[0];
-	lookAt[1] = target[1] - eye[1];
-	lookAt[2] = target[2] - eye[2];
-}
 
 void Update(ESContext* esContext, float deltaTime)
 {
@@ -552,7 +563,9 @@ void Draw(ESContext* esContext)
 
 	glUniformMatrix4fv(userData->mvpLoc, 1, GL_FALSE, (GLfloat*)& CameraData.mvpMatrix.m[0][0]);
 
-	glDrawElements(GL_TRIANGLES, 3*ObjData.f_num, GL_UNSIGNED_INT, ObjData.indices);
+	//ObjData.updated_face_num;
+
+	glDrawElements(GL_TRIANGLES, 3*ObjData.updated_face_num, GL_UNSIGNED_INT, ObjData.indices);
 
 	// draw floor
 }
@@ -568,7 +581,7 @@ int esMain(ESContext* esContext)
 {
 	esContext->userData = malloc(sizeof(UserData));
 
-	esCreateWindow(esContext, "ailian", 320, 240, ES_WINDOW_RGB | ES_WINDOW_DEPTH);
+	esCreateWindow(esContext, "ailian", 960, 720, ES_WINDOW_RGB | ES_WINDOW_DEPTH);
 
 	if (!Init(esContext))
 	{
@@ -581,3 +594,55 @@ int esMain(ESContext* esContext)
 
 	return GL_TRUE;
 }
+
+
+
+
+// back up
+
+//void VecMatMultiply3(GLfloat* vec3, const ESMatrix3 mat3)
+//{
+//	GLfloat vecNew[3];
+//	vecNew[0] = vec3[0] * mat3.m[0][0] + vec3[1] * mat3.m[1][0] + vec3[2] * mat3.m[2][0];
+//	vecNew[1] = vec3[0] * mat3.m[0][1] + vec3[1] * mat3.m[1][1] + vec3[2] * mat3.m[2][1];
+//	vecNew[2] = vec3[0] * mat3.m[0][2] + vec3[1] * mat3.m[1][2] + vec3[2] * mat3.m[2][2];
+//	vec3[0] = vecNew[0];
+//	vec3[1] = vecNew[1];
+//	vec3[2] = vecNew[2];
+//}
+
+//void Rotate(GLfloat* eye, GLfloat angle)
+//{
+//	// rotate along y axis mat
+//	ESMatrix3 mat3;
+//	mat3.m[0][0] = cos(angle * PI / 180.0f);
+//	mat3.m[0][1] = 0.0f;
+//	mat3.m[0][2] = -sin(angle * PI / 180.0f);
+//	mat3.m[1][0] = 0.0f;
+//	mat3.m[1][1] = 1.0f;
+//	mat3.m[1][2] = 0.0f;
+//	mat3.m[2][0] = sin(angle * PI / 180.0f);
+//	mat3.m[2][1] = 0.0f;
+//	mat3.m[2][2] = cos(angle * PI / 180.0f);
+//
+//	VecMatMultiply3(eye, mat3);
+//
+//}
+
+//void Redirection(GLfloat* lookAt, const GLfloat* target, const GLfloat* eye)
+//{
+//	lookAt[0] = target[0] - eye[0];
+//	lookAt[1] = target[1] - eye[1];
+//	lookAt[2] = target[2] - eye[2];
+//}
+
+//int updatedFaceNum(const int* face_counts, const int f_num)
+//{
+//	int updatedFaceNum = f_num;
+//	for (int i = 0; i < f_num; i++)
+//	{
+//		if (face_counts[i] == 4)
+//			updatedFaceNum++;
+//	}
+//	return updatedFaceNum;
+//}
