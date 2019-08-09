@@ -193,6 +193,9 @@ void GetDataNum(const char* filename, int* v_num, int* vt_num, int* vn_num, int*
 	}
 	while (!feof(file))
 	{
+		for (int i = 0; i < 1024; i++)
+			line[i] = 0;
+
 		fgets(line, 1024, file);
 
 		// process file, consider the format is correct
@@ -445,7 +448,7 @@ int Init(ESContext* esContext)
 {
 	// init ObjData
 
-	const char* filename = "stone.obj";
+	const char* filename = "soldier.obj";
 	GetDataNum(filename, ObjData.v_num, ObjData.vt_num, ObjData.vn_num, ObjData.f_num);
 	ObjData.vertices = malloc(sizeof(GLfloat) * 3 * ObjData.v_num);
 
@@ -463,7 +466,7 @@ int Init(ESContext* esContext)
 	ObjData.texIndices = malloc(sizeof(GLuint) * 3 * ObjData.updated_face_num);
 	ObjData.updatedVertices = malloc(sizeof(GLfloat) * 3 * ObjData.vt_num);
 	TransFArr(ObjData.ftArr, ObjData.texIndices);
-	//UpdateVertices(ObjData.updatedVertices);
+	UpdateVertices(ObjData.updatedVertices);
 
 	// print out data for testing
 
@@ -490,11 +493,11 @@ int Init(ESContext* esContext)
 	CameraData.up[2] = 0.0f;
 	CameraData.eye = malloc(sizeof(float) * 3);
 	CameraData.eye[0] = 0.0f;
-	CameraData.eye[1] = 80.0f;
-	CameraData.eye[2] = 150.0f;
+	CameraData.eye[1] = 100.0f;
+	CameraData.eye[2] = 200.0;
 	CameraData.target = malloc(sizeof(float) * 3);
 	CameraData.target[0] = 0.0f;
-	CameraData.target[1] = 80.0f;
+	CameraData.target[1] = 100.0f;
 	CameraData.target[2] = 0.0f;
 	CameraData.lookAt = malloc(sizeof(float) * 3);
 
@@ -520,7 +523,7 @@ int Init(ESContext* esContext)
 		"uniform sampler2D s_ailianMap;				  \n"
 		"void main()                                  \n"
 		"{                                            \n"
-		"   fragColor = (vec4(1.0, 0.0, 0.0, 0.0) + 0.5 ) * texture(s_ailianMap, v_texCoord);  \n"
+		"   fragColor = texture(s_ailianMap, v_texCoord);  \n"
 		"}                                            \n";
 
 	GLuint vertexShader;
@@ -584,7 +587,7 @@ int Init(ESContext* esContext)
 
 	userData->ailianMapLoc = glGetUniformLocation(userData->programObject, "s_ailianMap");
 
-	userData->ailianMapTexId = LoadTexture(esContext->platformData, "stone.tga");
+	userData->ailianMapTexId = LoadTexture(esContext->platformData, "soldier_gear.tga");
 
 	if (userData->ailianMapTexId == 0)
 	{
@@ -608,7 +611,7 @@ void Update(ESContext* esContext, float deltaTime)
 	esMatrixLoadIdentity(&perspective);
 	esMatrixLoadIdentity(&modelview);
 
-	esPerspective(&perspective, CameraData.fov, CameraData.aspect, 1.0f, 250.0f);
+	esPerspective(&perspective, CameraData.fov, CameraData.aspect, 1.0f, 25000.0f);
 
 	Rotate(CameraData.eye, userData->angle);
 	Redirection(CameraData.lookAt, CameraData.target, CameraData.eye);
@@ -645,7 +648,7 @@ void Draw(ESContext* esContext)
 
 	// Load the vertex data
 	// draw ailian without any texture
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, ObjData.vertices);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, ObjData.updatedVertices);
 	glEnableVertexAttribArray(0);
 
 	glUniformMatrix4fv(userData->mvpLoc, 1, GL_FALSE, (GLfloat*)& CameraData.mvpMatrix.m[0][0]);
@@ -659,7 +662,7 @@ void Draw(ESContext* esContext)
 
 	glUniform1i(userData->ailianMapLoc, 0);
 
-	glDrawElements(GL_TRIANGLES, 3 * ObjData.updated_face_num, GL_UNSIGNED_INT, ObjData.indices);
+	glDrawElements(GL_TRIANGLES, 3 * ObjData.updated_face_num, GL_UNSIGNED_INT, ObjData.texIndices);
 
 	// draw floor
 }
@@ -675,7 +678,7 @@ int esMain(ESContext* esContext)
 {
 	esContext->userData = malloc(sizeof(UserData));
 
-	esCreateWindow(esContext, "ailian", 320, 240, ES_WINDOW_RGB | ES_WINDOW_DEPTH);
+	esCreateWindow(esContext, "ailian", 960, 720, ES_WINDOW_RGB | ES_WINDOW_DEPTH);
 
 	if (!Init(esContext))
 	{

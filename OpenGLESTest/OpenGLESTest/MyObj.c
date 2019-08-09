@@ -153,6 +153,8 @@ void getDataNum(const char* filename, int* v_num, int* vt_num, int* vn_num, int*
 	}
 	while (!feof(file))
 	{
+		for (int i = 0; i < 1024; i++)
+			line[i] = 0;
 		fgets(line, 1024, file);
 
 		// process file, consider the format is correct
@@ -372,8 +374,7 @@ void transFvArr(const int** source, GLuint* ret)
 int Init(ESContext* esContext)
 {
 	// init ObjData
-
-	const char* filename = "ailian.obj";
+	const char* filename = "stone.obj";
 	getDataNum(filename, ObjData.v_num, ObjData.vt_num, ObjData.vn_num, ObjData.f_num);
 	ObjData.vertices = malloc(sizeof(GLfloat) * 3 * ObjData.v_num);
 	
@@ -389,21 +390,21 @@ int Init(ESContext* esContext)
 	
 
 	// print out data for testing
-
-	for (int i = 0; i < ObjData.updated_face_num; i++)
+	//printf("v_num: %d\nvt_num: %d\nvu_num: %d\nf_num: %d\n", ObjData.v_num, ObjData.vt_num, ObjData.vn_num, ObjData.f_num);
+	/*for (int i = 0; i < ObjData.updated_face_num; i++)
 	{
 		for (int j = 0; j < 3; j++)
 		{
 			printf("%d\t", ObjData.indices[i*3+j]);
 		}
 		printf("\n");
-	}
+	}*/
 	/*for (int i = 0; i < ObjData.f_num; i++)
 	{
 		printf("%d\n", ObjData.face_counts[i]);
 	}*/
 	//printf("%d", ObjData.f_num);
-	//printf("v_num: %d\nvt_num: %d\nvu_num: %d\nf_num: %d\n", ObjData.v_num, ObjData.vt_num, ObjData.vn_num, ObjData.f_num);
+	
 
 
 
@@ -417,11 +418,11 @@ int Init(ESContext* esContext)
 	CameraData.up[2] = 0.0f;
 	CameraData.eye = malloc(sizeof(float) * 3);
 	CameraData.eye[0] = 0.0f;
-	CameraData.eye[1] = 80.0f;
-	CameraData.eye[2] = 200.0f;
+	CameraData.eye[1] = 0.0f;
+	CameraData.eye[2] = 20.0f;
 	CameraData.target = malloc(sizeof(float) * 3);
 	CameraData.target[0] = 0.0f;
-	CameraData.target[1] = 80.0f;
+	CameraData.target[1] = 0.0f;
 	CameraData.target[2] = 0.0f;
 	CameraData.lookAt = malloc(sizeof(float) * 3);
 
@@ -546,6 +547,16 @@ void Update(ESContext* esContext, float deltaTime)
 void Draw(ESContext* esContext)
 {
 	UserData* userData = esContext->userData;
+	GLfloat floorVertices[] =
+	{
+		-4.0f,	0.0f,	-0.4f,
+		-4.0f,	0.0f,	4.0f,
+		4.0f,	0.0f,	4.0f,
+
+		4.0f,	0.0f,	4.0f,
+		-4.0f,	0.0f,	4.0f,
+		4.0f,	0.0f,	4.0f
+	};
 
 	// Set the viewport
 	glViewport(0, 0, esContext->width, esContext->height);
@@ -559,15 +570,15 @@ void Draw(ESContext* esContext)
 	// Load the vertex data
 	// draw ailian
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, ObjData.vertices);
+	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, floorVertices);
 	glEnableVertexAttribArray(0);
 
 	glUniformMatrix4fv(userData->mvpLoc, 1, GL_FALSE, (GLfloat*)& CameraData.mvpMatrix.m[0][0]);
 
-	//ObjData.updated_face_num;
-
 	glDrawElements(GL_TRIANGLES, 3*ObjData.updated_face_num, GL_UNSIGNED_INT, ObjData.indices);
 
 	// draw floor
+	//glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 void Shutdown(ESContext* esContext)
