@@ -36,4 +36,20 @@ void Redirection(GLfloat* lookAt, const GLfloat* target, const GLfloat* eye);
 // this method is for getting a correct number of face.
 int updatedFaceNum(const int* face_counts, const int f_num);
 
+// assign value to ret (a,b,c) based on vArr, representing the very middle and bottom position of 
+// the model in order to draw a floor
+void GetMidBotPosition(const GLfloat** vArr, const int length, GLfloat* ret);
+
+///
+// Load texture from disk
+// Used for model texture
+//
+GLuint LoadTexture(void* ioContext, char* fileName);
+
+///
+// Create a simple 2x2 texture image with four different colors
+// Used for drawing floor
+//
+GLuint CreateSimpleTexture2D();
+
 #endif

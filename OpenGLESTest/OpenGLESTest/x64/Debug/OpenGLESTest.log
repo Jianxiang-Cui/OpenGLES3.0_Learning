@@ -1,13 +1,21 @@
 ﻿  MyObj2.c
-D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj2.c(288,52): warning C4244:  “=”: 从“double”转换到“GLfloat”，可能丢失数据
-D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj2.c(309,47): warning C4244:  “=”: 从“double”转换到“GLfloat”，可能丢失数据
-D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj2.c(325,50): warning C4244:  “=”: 从“double”转换到“GLfloat”，可能丢失数据
-D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj2.c(453,36): warning C4047:  “函数”:“int *”与“int”的间接级别不同
-D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj2.c(453,36): warning C4024:  “GetDataNum”: 形参和实参 2 的类型不同
-D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj2.c(453,52): warning C4047:  “函数”:“int *”与“int”的间接级别不同
-D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj2.c(453,52): warning C4024:  “GetDataNum”: 形参和实参 3 的类型不同
-D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj2.c(453,68): warning C4047:  “函数”:“int *”与“int”的间接级别不同
-D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj2.c(453,68): warning C4024:  “GetDataNum”: 形参和实参 4 的类型不同
-D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj2.c(453,83): warning C4047:  “函数”:“int *”与“int”的间接级别不同
-D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj2.c(453,83): warning C4024:  “GetDataNum”: 形参和实参 5 的类型不同
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj2.c(271,52): warning C4244:  “=”: 从“double”转换到“GLfloat”，可能丢失数据
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj2.c(292,47): warning C4244:  “=”: 从“double”转换到“GLfloat”，可能丢失数据
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj2.c(293,52): warning C4244:  “=”: 从“double”转换到“GLfloat”，可能丢失数据
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj2.c(310,50): warning C4244:  “=”: 从“double”转换到“GLfloat”，可能丢失数据
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj2.c(441,36): warning C4047:  “函数”:“int *”与“int”的间接级别不同
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj2.c(441,36): warning C4024:  “GetDataNum”: 形参和实参 2 的类型不同
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj2.c(441,52): warning C4047:  “函数”:“int *”与“int”的间接级别不同
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj2.c(441,52): warning C4024:  “GetDataNum”: 形参和实参 3 的类型不同
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj2.c(441,68): warning C4047:  “函数”:“int *”与“int”的间接级别不同
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj2.c(441,68): warning C4024:  “GetDataNum”: 形参和实参 4 的类型不同
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj2.c(441,83): warning C4047:  “函数”:“int *”与“int”的间接级别不同
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj2.c(441,83): warning C4024:  “GetDataNum”: 形参和实参 5 的类型不同
+  myUtil.c
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\MyObj2.c(662,15): warning C4098:  “DrawFloor”:“void”函数返回值
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\myUtil.c(26,41): warning C4244:  “=”: 从“double”转换到“GLfloat”，可能丢失数据
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\myUtil.c(28,42): warning C4244:  “=”: 从“double”转换到“GLfloat”，可能丢失数据
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\myUtil.c(32,41): warning C4244:  “=”: 从“double”转换到“GLfloat”，可能丢失数据
+  正在生成代码...
+D:\OpenGLES3\OpenGLESTest\OpenGLESTest\myUtil.c(34,41): warning C4244:  “=”: 从“double”转换到“GLfloat”，可能丢失数据
   OpenGLESTest.vcxproj -> D:\OpenGLES3\OpenGLESTest\x64\Debug\OpenGLESTest.exe

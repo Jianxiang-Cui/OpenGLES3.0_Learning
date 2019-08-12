@@ -63,6 +63,7 @@ typedef struct
 
 	// Texture handle
 	GLuint ailianMapTexId;
+	GLuint floorMapTexId;
 
 } UserData;
 
@@ -76,6 +77,7 @@ struct
 	int updated_face_num;
 
 	GLfloat** vArr; //存放点的二维数组
+	GLfloat** vtArr; //存放纹理坐标的二维数组
 	GLfloat** vnArr; //存放法线的二维数组
 	int** fvArr; //存放面顶点的二维数组
 	int** ftArr; //存放纹理坐标的二维数组
@@ -86,8 +88,12 @@ struct
 
 	GLfloat* updatedVertices;
 	GLfloat* texCoords;
-	GLfloat* updatedTexCoords;
 	GLuint* texIndices;
+
+	GLfloat* updatedTexCoords;
+	GLfloat* updatedAgainVertices;
+
+	GLfloat* midbot;
 } ObjData;
 
 struct
@@ -101,36 +107,8 @@ struct
 	ESMatrix  mvpMatrix;
 } CameraData;
 
-///
-// Load texture from disk
-//
-GLuint LoadTexture(void* ioContext, char* fileName)
-{
-	int width,
-		height;
 
-	char* buffer = esLoadTGA(ioContext, fileName, &width, &height);
-	GLuint texId;
 
-	if (buffer == NULL)
-	{
-		esLogMessage("Error loading (%s) image.\n", fileName);
-		return 0;
-	}
-
-	glGenTextures(1, &texId);
-	glBindTexture(GL_TEXTURE_2D, texId);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, buffer);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-	free(buffer);
-
-	return texId;
-}
 
 ///
 // Create a shader object, load the shader source, and
@@ -236,6 +214,11 @@ int LoadDataFromFile(const char* filename)
 		ObjData.vArr[i] = (GLfloat*)malloc(sizeof(GLfloat) * 3);
 	}
 
+	ObjData.vtArr = (GLfloat * *)malloc(sizeof(GLfloat*) * ObjData.vt_num);
+	for (int i = 0; i < ObjData.vt_num; i++)
+	{
+		ObjData.vtArr[i] = (GLfloat*)malloc(sizeof(GLfloat) * 2); // ignore the third value of vt
+	}
 	ObjData.texCoords = (GLfloat *)malloc(sizeof(GLfloat) * 2 * ObjData.vt_num);
 
 	ObjData.vnArr = (GLfloat * *)malloc(sizeof(GLfloat*) * ObjData.vn_num);
@@ -262,7 +245,7 @@ int LoadDataFromFile(const char* filename)
 	}
 
 	// store data to arrays
-	int vnRow = 0, vRow = 0, fRow = 0;
+	int vnRow = 0, vtRow = 0, vRow = 0, fRow = 0;
 	int vtIndex = 0;
 	while (!feof(file))
 	{
@@ -307,6 +290,7 @@ int LoadDataFromFile(const char* filename)
 					{
 						// filter the first token and ignore the third value of vt
 						ObjData.texCoords[vtIndex] = atof(token);
+						ObjData.vtArr[vtRow][count - 1] = atof(token);
 						vtIndex++;
 						//printf("%f\n", ObjData.vnArr[vnRow][count - 1]);
 					}
@@ -314,6 +298,7 @@ int LoadDataFromFile(const char* filename)
 					token = strtok_s(NULL, " ", &next_token);
 					count++;
 				}
+				vtRow++;
 			}
 			else							// v
 			{
@@ -442,6 +427,9 @@ void UpdateVertices(GLfloat* ret)
 }
 
 
+
+
+
 ///
 // Initialize the shader and program object
 //
@@ -465,29 +453,38 @@ int Init(ESContext* esContext)
 	
 
 	ObjData.texIndices = malloc(sizeof(GLuint) * 3 * ObjData.updated_face_num);
-	ObjData.updatedVertices = malloc(sizeof(GLfloat) * 3 * ObjData.vt_num); //ObjData.updated_face_num * 3);
-	ObjData.updatedTexCoords = malloc(sizeof(GLfloat) * 3 * ObjData.updated_face_num * 2);
-
-	/*for (size_t i = 0; i < ObjData.updated_face_num; i++)
-	{
-		ObjData.updatedVertices[i * 3] = ObjData.vertices[ObjData.indices[i * 3]];
-		ObjData.updatedVertices[i * 3 + 1] = ObjData.vertices[ObjData.indices[i*3 + 1]];
-		ObjData.updatedTexCoords[i * 3] = ObjData.texCoords[ObjData.texIndices[i * 3]];
-	}*/
-
+	ObjData.updatedVertices = malloc(sizeof(GLfloat) * 3 * ObjData.vt_num);
 	TransFArr(ObjData.ftArr, ObjData.texIndices);
 	UpdateVertices(ObjData.updatedVertices);
 
-	// print out data for testing
 
-	for (int i = 0; i < ObjData.vt_num; i++)
+	ObjData.updatedAgainVertices = malloc(sizeof(GLfloat) * 3 * 3 * ObjData.updated_face_num); // three float num makes a vertex, three vertices make a face
+	ObjData.updatedTexCoords = malloc(sizeof(int) * 2 * 3 * ObjData.updated_face_num); // two float num makes a texcoord, three texcoords make a face
+
+	for (int i = 0; i < ObjData.updated_face_num * 3; i++)
 	{
 		for (int j = 0; j < 3; j++)
 		{
-			printf("%f\t", ObjData.updatedVertices[i * 3 + j]);
+			ObjData.updatedAgainVertices[i * 3 + j] = ObjData.vArr[ObjData.indices[i]][j];
+		}
+		for (int j = 0; j < 2; j++)
+		{
+			ObjData.updatedTexCoords[i * 2 + j] = ObjData.vtArr[ObjData.texIndices[i]][j];
+		}
+	}
+
+	ObjData.midbot = malloc(sizeof(GLfloat) * 3);
+	GetMidBotPosition(ObjData.vArr, ObjData.v_num, ObjData.midbot);
+
+	// print out data for testing
+	/*for (int i = 0; i < 3 * ObjData.updated_face_num; i++)
+	{
+		for (int j = 0; j < 3; j++)
+		{
+			printf("%f\t", ObjData.updatedAgainVertices[i * 3 + j]);
 		}
 		printf("\n");
-	}
+	}*/
 	//printf("%d", ObjData.f_num);
 	//printf("v_num: %d\nvt_num: %d\nvu_num: %d\nf_num: %d\n", ObjData.v_num, ObjData.vt_num, ObjData.vn_num, ObjData.f_num);
 
@@ -503,7 +500,7 @@ int Init(ESContext* esContext)
 	CameraData.up[2] = 0.0f;
 	CameraData.eye = malloc(sizeof(float) * 3);
 	CameraData.eye[0] = 0.0f;
-	CameraData.eye[1] = 0.0f;
+	CameraData.eye[1] = 2.0f;
 	CameraData.eye[2] = 5.0f;
 	CameraData.target = malloc(sizeof(float) * 3);
 	CameraData.target[0] = 0.0f;
@@ -638,7 +635,42 @@ void Update(ESContext* esContext, float deltaTime)
 	esMatrixMultiply(&CameraData.mvpMatrix, &modelview, &perspective);
 }
 
+// based on the origin, draw a square plat floor with given side length 
+void DrawFloor(ESContext* esContext, const GLfloat* origin, const GLfloat length)
+{
+	UserData* userData = esContext->userData;
 
+	GLfloat originX = origin[0];
+	GLfloat originY = origin[1];
+	GLfloat originZ = origin[2];
+	GLfloat floorVertices[] =
+	{
+		originX + length,	originY,	originZ - length,
+		originX - length,	originY,	originZ - length,
+		originX - length,	originY,	originZ + length,
+
+		originX + length,	originY,	originZ - length,
+		originX - length,	originY,	originZ + length,
+		originX + length,	originY,	originZ + length
+	};
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, floorVertices);
+
+	userData->floorMapTexId = CreateSimpleTexture2D();
+
+	if (userData->floorMapTexId == 0)
+	{
+		return FALSE;
+	}
+
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, floorVertices);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, userData->floorMapTexId);
+
+	glUniform1i(userData->ailianMapLoc, 1);
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+}
 
 ///
 // Draw a triangle using the shader pair created in Init()
@@ -657,14 +689,20 @@ void Draw(ESContext* esContext)
 	glUseProgram(userData->programObject);
 
 	// Load the vertex data
-	// draw ailian without any texture
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, ObjData.updatedVertices);
+
+	// corresponding relation
+	// updatedVertices -- texCoords -- texIndices
+	// updatedAgainVertices -- updatedTexCoords -- glDrawArrays
+
+
+	// draw model
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, ObjData.updatedAgainVertices);
 	glEnableVertexAttribArray(0);
 
 	glUniformMatrix4fv(userData->mvpLoc, 1, GL_FALSE, (GLfloat*)& CameraData.mvpMatrix.m[0][0]);
 
 	// stick texture on ailian
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, ObjData.texCoords);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, ObjData.updatedTexCoords);
 	glEnableVertexAttribArray(1);
 
 	glActiveTexture(GL_TEXTURE0);
@@ -672,9 +710,12 @@ void Draw(ESContext* esContext)
 
 	glUniform1i(userData->ailianMapLoc, 0);
 
-	glDrawElements(GL_TRIANGLES, 3 * ObjData.updated_face_num, GL_UNSIGNED_INT, ObjData.texIndices);
+	//glDrawElements(GL_TRIANGLES, 3 * ObjData.updated_face_num, GL_UNSIGNED_INT, ObjData.texIndices);
+
+	glDrawArrays(GL_TRIANGLES, 0, 3 * ObjData.updated_face_num);
 
 	// draw floor
+	DrawFloor(esContext, ObjData.midbot, 4.0f);
 }
 
 void Shutdown(ESContext* esContext)

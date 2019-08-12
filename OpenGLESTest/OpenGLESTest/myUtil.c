@@ -1,3 +1,4 @@
+#include <math.h>
 #include "myUtil.h"
 
 #define PI 3.14159265
@@ -63,4 +64,91 @@ int updatedFaceNum(const int* face_counts, const int f_num)
 			updatedFaceNum++;
 	}
 	return updatedFaceNum;
+}
+
+// assign value to ret (a,b,c) based on vArr, representing the very middle and bottom position of 
+// the model in order to draw a floor
+void GetMidBotPosition(const GLfloat** vArr, const int length, GLfloat* ret)
+{
+	GLfloat x = 0;
+	GLfloat y = 0;
+	GLfloat z = 0;
+
+	for (int i = 0; i < length; i++)
+	{
+		x += vArr[i][0];
+		y = min(y, vArr[i][1]);
+		z += vArr[i][2];
+	}
+
+	ret[0] = x / length;
+	ret[1] = y;
+	ret[2] = z / length;
+}
+
+///
+// Load texture from disk
+//
+GLuint LoadTexture(void* ioContext, char* fileName)
+{
+	int width,
+		height;
+
+	char* buffer = esLoadTGA(ioContext, fileName, &width, &height);
+	GLuint texId;
+
+	if (buffer == NULL)
+	{
+		esLogMessage("Error loading (%s) image.\n", fileName);
+		return 0;
+	}
+
+	glGenTextures(1, &texId);
+	glBindTexture(GL_TEXTURE_2D, texId);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, buffer);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	free(buffer);
+
+	return texId;
+}
+
+///
+// Create a simple 2x2 texture image with four different colors
+//
+GLuint CreateSimpleTexture2D()
+{
+	// Texture object handle
+	GLuint textureId;
+
+	// 2x2 Image, 3 bytes per pixel (R, G, B)
+	GLubyte pixels[4 * 3] =
+	{
+		250,240,230,
+		250,240,230,
+		250,240,230,
+		250,240,230,
+	};
+
+	// Use tightly packed data
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+	// Generate a texture object
+	glGenTextures(1, &textureId);
+
+	// Bind the texture object
+	glBindTexture(GL_TEXTURE_2D, textureId);
+
+	// Load the texture
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 2, 2, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+
+	// Set the filtering mode
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	return textureId;
 }
