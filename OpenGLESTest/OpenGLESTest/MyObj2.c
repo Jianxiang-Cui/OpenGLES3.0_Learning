@@ -86,6 +86,7 @@ struct
 
 	GLfloat* updatedVertices;
 	GLfloat* texCoords;
+	GLfloat* updatedTexCoords;
 	GLuint* texIndices;
 } ObjData;
 
@@ -448,7 +449,7 @@ int Init(ESContext* esContext)
 {
 	// init ObjData
 
-	const char* filename = "soldier.obj";
+	const char* filename = "bear.obj";
 	GetDataNum(filename, ObjData.v_num, ObjData.vt_num, ObjData.vn_num, ObjData.f_num);
 	ObjData.vertices = malloc(sizeof(GLfloat) * 3 * ObjData.v_num);
 
@@ -464,7 +465,16 @@ int Init(ESContext* esContext)
 	
 
 	ObjData.texIndices = malloc(sizeof(GLuint) * 3 * ObjData.updated_face_num);
-	ObjData.updatedVertices = malloc(sizeof(GLfloat) * 3 * ObjData.vt_num);
+	ObjData.updatedVertices = malloc(sizeof(GLfloat) * 3 * ObjData.vt_num); //ObjData.updated_face_num * 3);
+	ObjData.updatedTexCoords = malloc(sizeof(GLfloat) * 3 * ObjData.updated_face_num * 2);
+
+	/*for (size_t i = 0; i < ObjData.updated_face_num; i++)
+	{
+		ObjData.updatedVertices[i * 3] = ObjData.vertices[ObjData.indices[i * 3]];
+		ObjData.updatedVertices[i * 3 + 1] = ObjData.vertices[ObjData.indices[i*3 + 1]];
+		ObjData.updatedTexCoords[i * 3] = ObjData.texCoords[ObjData.texIndices[i * 3]];
+	}*/
+
 	TransFArr(ObjData.ftArr, ObjData.texIndices);
 	UpdateVertices(ObjData.updatedVertices);
 
@@ -493,11 +503,11 @@ int Init(ESContext* esContext)
 	CameraData.up[2] = 0.0f;
 	CameraData.eye = malloc(sizeof(float) * 3);
 	CameraData.eye[0] = 0.0f;
-	CameraData.eye[1] = 100.0f;
-	CameraData.eye[2] = 200.0;
+	CameraData.eye[1] = 0.0f;
+	CameraData.eye[2] = 5.0f;
 	CameraData.target = malloc(sizeof(float) * 3);
 	CameraData.target[0] = 0.0f;
-	CameraData.target[1] = 100.0f;
+	CameraData.target[1] = 0.0f;
 	CameraData.target[2] = 0.0f;
 	CameraData.lookAt = malloc(sizeof(float) * 3);
 
@@ -587,7 +597,7 @@ int Init(ESContext* esContext)
 
 	userData->ailianMapLoc = glGetUniformLocation(userData->programObject, "s_ailianMap");
 
-	userData->ailianMapTexId = LoadTexture(esContext->platformData, "soldier_gear.tga");
+	userData->ailianMapTexId = LoadTexture(esContext->platformData, "bear.tga");
 
 	if (userData->ailianMapTexId == 0)
 	{
@@ -611,7 +621,7 @@ void Update(ESContext* esContext, float deltaTime)
 	esMatrixLoadIdentity(&perspective);
 	esMatrixLoadIdentity(&modelview);
 
-	esPerspective(&perspective, CameraData.fov, CameraData.aspect, 1.0f, 25000.0f);
+	esPerspective(&perspective, CameraData.fov, CameraData.aspect, 1.0f, 250.0f);
 
 	Rotate(CameraData.eye, userData->angle);
 	Redirection(CameraData.lookAt, CameraData.target, CameraData.eye);
