@@ -135,7 +135,7 @@
     <ClCompile Include="Common\Source\esTransform.c" />
     <ClCompile Include="Common\Source\esUtil.c" />
     <ClCompile Include="Common\Source\Win32\esUtil_win32.c" />
-    <ClCompile Include="MyObj2.c" />
+    <ClCompile Include="MyObj3.c" />
     <ClCompile Include="myUtil.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

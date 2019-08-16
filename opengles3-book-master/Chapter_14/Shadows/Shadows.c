@@ -311,6 +311,7 @@ int Init ( ESContext *esContext )
    userData->sceneMvpLightLoc = glGetUniformLocation ( userData->sceneProgramObject, "u_mvpLightMatrix" );
    userData->shadowMapMvpLightLoc = glGetUniformLocation ( userData->shadowMapProgramObject, "u_mvpLightMatrix" );
 
+
    // Get the sampler location
    userData->shadowMapSamplerLoc = glGetUniformLocation ( userData->sceneProgramObject, "s_shadowMap" );
 
