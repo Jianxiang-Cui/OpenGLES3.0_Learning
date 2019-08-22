@@ -44,7 +44,7 @@
     <ClCompile Include="myUtil.c">
       <Filter>Common\Source</Filter>
     </ClCompile>
-    <ClCompile Include="MyObj3.c">
+    <ClCompile Include="MyObj4.c">
       <Filter>Common\Source</Filter>
     </ClCompile>
   </ItemGroup>

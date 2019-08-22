@@ -78,7 +78,14 @@ typedef struct
 	GLuint ailianMapTexId;
 	GLuint floorMapTexId;
 
-	ESMatrix  mvpLightMatrix;
+	// MVP matrices
+	ESMatrix  groundMvpMatrix;
+	ESMatrix  groundMvpLightMatrix;
+	GLfloat* floorVertices;
+
+	ESMatrix  mvpLightMatrix; // for depth texture of model
+
+
 	float lightPosition[3];
 } UserData;
 
@@ -119,7 +126,7 @@ struct
 	GLfloat* up;
 	GLfloat  fov;
 	GLfloat  aspect;
-	ESMatrix  mvpMatrix;
+	ESMatrix  mvpMatrix; // for real render of model
 } CameraData;
 
 
@@ -455,7 +462,7 @@ GLuint LoadShader(GLenum type, const char* shaderSrc)
 
 }
 
-InitMVP(ESContext* esContext)
+int InitMVP(ESContext* esContext)
 {
 	UserData* userData = esContext->userData;
 	ESMatrix perspective;
@@ -463,17 +470,18 @@ InitMVP(ESContext* esContext)
 	ESMatrix modelview;
 	ESMatrix model;
 	ESMatrix view;
-	
+
+	// Generate a perspective matrix with a 45 degree FOV for the scene rendering
+	esMatrixLoadIdentity(&perspective);
+	esPerspective(&perspective, CameraData.fov, CameraData.aspect, 1.0f, 250.0f);
 
 	// Generate an orthographic projection matrix for the shadow map rendering
 	esMatrixLoadIdentity(&ortho);
-	esOrtho(&ortho, -10, 10, -10, 10, -30, 30);
+	esOrtho(&ortho, -20, 20, -20, 20, -60, 60);
 
-	// GROUND
-   // Generate a model view matrix to rotate/translate the ground
+	// MODEL
 	esMatrixLoadIdentity(&model);
 
-	// Center the ground
 	esTranslate(&model, 0.0f, 0.0f, -2.0f);
 
 	// create view matrix transformation from the light position
@@ -484,6 +492,39 @@ InitMVP(ESContext* esContext)
 	esMatrixMultiply(&modelview, &model, &view);
 
 	esMatrixMultiply(&userData->mvpLightMatrix, &modelview, &ortho);
+
+
+
+	// GROUND
+   // Generate a model view matrix to rotate/translate the ground
+	esMatrixLoadIdentity(&model);
+
+	// Center the ground
+	//esTranslate(&model, -2.0f, -2.0f, 0.0f);
+
+	// create view matrix transformation from the eye position
+	esMatrixLookAt(&view,
+		CameraData.eye[0], CameraData.eye[1], CameraData.eye[2],
+		0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f);
+
+	esMatrixMultiply(&modelview, &model, &view);
+
+	// Compute the final ground MVP for the scene rendering by multiplying the 
+	// modelview and perspective matrices together
+	esMatrixMultiply(&userData->groundMvpMatrix, &modelview, &perspective);
+
+	// create view matrix transformation from the light position
+	esMatrixLookAt(&view,
+		userData->lightPosition[0], userData->lightPosition[1], userData->lightPosition[2],
+		0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f);
+
+	esMatrixMultiply(&modelview, &model, &view);
+
+	// Compute the final ground MVP for the shadow map rendering by multiplying the 
+	// modelview and ortho matrices together
+	esMatrixMultiply(&userData->groundMvpLightMatrix, &modelview, &ortho);
 
 	return TRUE;
 }
@@ -574,15 +615,8 @@ int Init(ESContext* esContext)
 	ObjData.midbot = malloc(sizeof(GLfloat) * 3);
 	GetMidBotPosition(ObjData.vArr, ObjData.v_num, ObjData.midbot);
 
-	// print out data for testing
-	/*for (int i = 0; i < 3 * ObjData.updated_face_num; i++)
-	{
-		for (int j = 0; j < 3; j++)
-		{
-			printf("%f\t", ObjData.updatedAgainVertices[i * 3 + j]);
-		}
-		printf("\n");
-	}*/
+	
+	userData->floorVertices = malloc(sizeof(GLfloat) * 3 * 6);
 
 
 
@@ -604,9 +638,9 @@ int Init(ESContext* esContext)
 	CameraData.lookAt = malloc(sizeof(float) * 3);
 
 	// init light data
-	userData->lightPosition[0] = 7.0f;
-	userData->lightPosition[1] = 6.0f;
-	userData->lightPosition[2] = 3.0f;
+	userData->lightPosition[0] = 6.0f;
+	userData->lightPosition[1] = 0.0f;
+	userData->lightPosition[2] = 5.0f;
 	
 	const char vShadowMapShaderStr[] =
 		"#version 300 es                                  \n"
@@ -816,7 +850,11 @@ void DrawFloor(ESContext* esContext, const GLfloat* origin, const GLfloat length
 		originX - length,	originY,	originZ + length,
 		originX + length,	originY,	originZ + length
 	};
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, floorVertices);
+	memcpy(userData->floorVertices, &floorVertices, sizeof(GLfloat) * 3 * 6);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, userData->floorVertices);
+
+	glUniformMatrix4fv(userData->sceneMvpLoc, 1, GL_FALSE, (GLfloat*)& userData->groundMvpMatrix.m[0][0]);
+	glUniformMatrix4fv(userData->sceneMvpLightLoc, 1, GL_FALSE, (GLfloat*)& userData->groundMvpLightMatrix.m[0][0]);
 
 	userData->floorMapTexId = CreateSimpleTexture2D();
 
@@ -825,7 +863,7 @@ void DrawFloor(ESContext* esContext, const GLfloat* origin, const GLfloat length
 		return FALSE;
 	}
 
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, floorVertices);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, userData->floorVertices);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, userData->floorMapTexId);
@@ -835,34 +873,24 @@ void DrawFloor(ESContext* esContext, const GLfloat* origin, const GLfloat length
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
+
 void DrawScene(ESContext* esContext, GLint mvpLoc, GLint mvpLightLoc)
 {
 	UserData* userData = esContext->userData;
 
-	// draw model
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, ObjData.updatedAgainVertices);
 	glEnableVertexAttribArray(0);
 
 	glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (GLfloat*)& CameraData.mvpMatrix.m[0][0]);
 	glUniformMatrix4fv(mvpLightLoc, 1, GL_FALSE, (GLfloat*)& userData->mvpLightMatrix.m[0][0]);
 
-	//// stick texture on ailian
-	//glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, ObjData.updatedTexCoords);
-	//glEnableVertexAttribArray(1);
+	glDrawArrays(GL_TRIANGLES, 0, 3 * ObjData.updated_face_num);
 
-	//glActiveTexture(GL_TEXTURE0);
-	//glBindTexture(GL_TEXTURE_2D, userData->ailianMapTexId);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, userData->floorVertices);
+	glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, (GLfloat*)& userData->groundMvpMatrix.m[0][0]);
+	glUniformMatrix4fv(mvpLightLoc, 1, GL_FALSE, (GLfloat*)& userData->groundMvpLightMatrix.m[0][0]);
 
-	//glUniform1i(userData->ailianMapLoc, 0);
-
-
-	////glDrawElements(GL_TRIANGLES, 3 * ObjData.updated_face_num, GL_UNSIGNED_INT, ObjData.texIndices);
-
-	//glDrawArrays(GL_TRIANGLES, 0, 3 * ObjData.updated_face_num);
-	//glBindTexture(GL_TEXTURE_2D, 0); // clear GL_TEXTURE_2D status
-
-	//// draw floor
-	//DrawFloor(esContext, ObjData.midbot, 4.0f);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
 ///
@@ -943,8 +971,6 @@ void Draw(ESContext* esContext)
 
 	glUniform1i(userData->ailianMapLoc, 0);
 	
-
-	//glDrawElements(GL_TRIANGLES, 3 * ObjData.updated_face_num, GL_UNSIGNED_INT, ObjData.texIndices);
 
 	glDrawArrays(GL_TRIANGLES, 0, 3 * ObjData.updated_face_num);
 	glBindTexture(GL_TEXTURE_2D, 0); // clear GL_TEXTURE_2D status
