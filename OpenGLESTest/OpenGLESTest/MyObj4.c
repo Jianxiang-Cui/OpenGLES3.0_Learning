@@ -1,3 +1,5 @@
+
+
 // The MIT License (MIT)
 //
 // Copyright (c) 2013 Dan Ginsburg, Budirijanto Purnomo
@@ -94,6 +96,7 @@ typedef struct
 	GLuint modelTexcoordVBO;
 
 	GLuint groundTexId;
+	GLuint groundTexcoordVBO;
 
 	float modelRotateAngle;
 } UserData;
@@ -600,7 +603,7 @@ int Init(ESContext* esContext)
 
 
 	ObjData.updatedAgainVertices = malloc(sizeof(GLfloat) * 3 * 3 * ObjData.updated_face_num); // three float num makes a vertex, three vertices make a face
-	ObjData.updatedTexCoords = malloc(sizeof(int) * 2 * 3 * ObjData.updated_face_num); // two float num makes a texcoord, three texcoords make a face
+	ObjData.updatedTexCoords = malloc(sizeof(GLfloat) * 2 * 3 * ObjData.updated_face_num); // two float num makes a texcoord, three texcoords make a face
 
 	UpdatedAgainVertices();
 
@@ -703,8 +706,14 @@ int Init(ESContext* esContext)
 		return FALSE;
 	}
 
+	userData->groundTexId = CreateSimpleTexture2D();
+	if (userData->groundTexId == 0)
+	{
+		return FALSE;
+	}
+
 	// Generate the vertex and index data for the ground
-	userData->groundGridSize = 3;
+	userData->groundGridSize = 2;
 	userData->groundNumIndices = esGenSquareGrid(userData->groundGridSize, &positions, &indices);
 	
 
@@ -722,8 +731,24 @@ int Init(ESContext* esContext)
 		positions, GL_STATIC_DRAW);
 	free(positions);
 
-	// Generate the vertex and index date for the model
+	// Texcoord buffer object for the ground
+	/*GLfloat groundTexCoords[4 * 2] =
+	{
+		0.0f, 0.0f,
+		1.0f, 0.0f,
+		0.0f, 1.0f,
+		1.0f, 1.0f
+	};*/
+	glGenBuffers(1, &userData->groundTexcoordVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, userData->groundTexcoordVBO);
+	glBufferData(GL_ARRAY_BUFFER, 
+		sizeof(GLfloat) * 2 * userData->groundGridSize * userData->groundGridSize, 
+		NULL, GL_STATIC_DRAW);
 
+
+
+
+	// Generate the vertex and index date for the model
 	indices = malloc(sizeof(GLuint) * 3 * ObjData.updated_face_num);
 	for (GLuint i = 0; i < 3 * ObjData.updated_face_num; i++)
 	{
@@ -906,21 +931,16 @@ void DrawScene(ESContext* esContext,
 	// Set the ground color to light gray
 	glVertexAttrib4f(COLOR_LOC, 0.9f, 0.9f, 0.9f, 1.0f);
 
-	/*userData->groundTexId = CreateSimpleTexture2D();
-
-	if (userData->groundTexId == 0)
-	{
-		return FALSE;
-	}
-
-	glVertexAttribPointer(TEXTURE_LOC, 2, GL_FLOAT, GL_FALSE, 0, (const void*)NULL);
-
-	glActiveTexture(GL_TEXTURE2);
+	// Draw ground texture
+	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, userData->groundTexId);
-
-	glUniform1i(userData->modelSamplerLoc, 2);*/
+	glUniform1i(userData->modelSamplerLoc, 1);
 
 	glDrawElements(GL_TRIANGLES, userData->groundNumIndices, GL_UNSIGNED_INT, (const void*)NULL);
+
+
+
+
 
 	// Draw the model
 	// Load the vertex position
