@@ -833,43 +833,6 @@ void Update(ESContext* esContext, float deltaTime)
 	esMatrixLoadIdentity(&ortho);
 	esOrtho(&ortho, -10, 10, -10, 10, -30, 30);
 
-	// GROUND
-	// Generate a model view matrix to rotate/translate the ground
-	esMatrixLoadIdentity(&model);
-
-	// Center the ground
-	esTranslate(&model, -2.0f, -2.0f, 0.0f);
-	esScale(&model, 10.0f, 10.0f, 10.0f);
-	esRotate(&model, 90.0f, 1.0f, 0.0f, 0.0f);
-
-	// create view matrix transformation from the eye position
-	esMatrixLookAt(&view,
-		userData->eyePosition[0], userData->eyePosition[1], userData->eyePosition[2],
-		0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f);
-
-	esMatrixMultiply(&modelview, &model, &view);
-
-	// Compute the final ground MVP for the scene rendering by multiplying the 
-	// modelview and perspective matrices together
-	esMatrixMultiply(&userData->groundMvpMatrix, &modelview, &perspective);
-
-	// create view matrix transformation from the light position
-	esMatrixLookAt(&view,
-		userData->lightPosition[0], userData->lightPosition[1], userData->lightPosition[2],
-		0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f);
-
-	esMatrixMultiply(&modelview, &model, &view);
-
-	// Compute the final ground MVP for the shadow map rendering by multiplying the 
-	// modelview and ortho matrices together
-	esMatrixMultiply(&userData->groundMvpLightMatrix, &modelview, &ortho);
-
-
-
-
-
 	// MODEL
 	// position the model
 	esMatrixLoadIdentity(&model);

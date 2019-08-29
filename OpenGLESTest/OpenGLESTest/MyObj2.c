@@ -653,6 +653,13 @@ void DrawFloor(ESContext* esContext, const GLfloat* origin, const GLfloat length
 		originX - length,	originY,	originZ + length,
 		originX + length,	originY,	originZ + length
 	};
+	GLfloat groundTexCoords[4 * 2] =
+	{
+		0.0f, 0.0f,
+		1.0f, 0.0f,
+		0.0f, 1.0f,
+		1.0f, 1.0f
+	};
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, floorVertices);
 
 	userData->floorMapTexId = CreateSimpleTexture2D();
@@ -662,7 +669,7 @@ void DrawFloor(ESContext* esContext, const GLfloat* origin, const GLfloat length
 		return FALSE;
 	}
 
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, floorVertices);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, groundTexCoords);
 
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, userData->floorMapTexId);

@@ -374,7 +374,7 @@ void transFvArr(const int** source, GLuint* ret)
 int Init(ESContext* esContext)
 {
 	// init ObjData
-	const char* filename = "stone.obj";
+	const char* filename = "bear.obj";
 	getDataNum(filename, ObjData.v_num, ObjData.vt_num, ObjData.vn_num, ObjData.f_num);
 	ObjData.vertices = malloc(sizeof(GLfloat) * 3 * ObjData.v_num);
 	
@@ -418,11 +418,11 @@ int Init(ESContext* esContext)
 	CameraData.up[2] = 0.0f;
 	CameraData.eye = malloc(sizeof(float) * 3);
 	CameraData.eye[0] = 0.0f;
-	CameraData.eye[1] = 0.0f;
-	CameraData.eye[2] = 20.0f;
+	CameraData.eye[1] = 3.0f;
+	CameraData.eye[2] = 4.0f;
 	CameraData.target = malloc(sizeof(float) * 3);
 	CameraData.target[0] = 0.0f;
-	CameraData.target[1] = 0.0f;
+	CameraData.target[1] = 2.0f;
 	CameraData.target[2] = 0.0f;
 	CameraData.lookAt = malloc(sizeof(float) * 3);
 

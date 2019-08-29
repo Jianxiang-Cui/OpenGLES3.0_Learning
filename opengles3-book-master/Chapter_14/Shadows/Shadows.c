@@ -451,60 +451,15 @@ void Draw ( ESContext *esContext )
 
    glUseProgram ( userData->shadowMapProgramObject );
 
+   DrawScene ( esContext, userData->shadowMapMvpLoc, userData->shadowMapMvpLightLoc );
 
-
-
+   glDisable( GL_POLYGON_OFFSET_FILL );
 
 
 
 
    
-   // my test
-   //DrawScene ( esContext, userData->shadowMapMvpLoc, userData->shadowMapMvpLightLoc );
-   glBindBuffer(GL_ARRAY_BUFFER, userData->groundPositionVBO);
-   glVertexAttribPointer(POSITION_LOC, 3, GL_FLOAT,
-	   GL_FALSE, 3 * sizeof(GLfloat), (const void*)NULL);
-   glEnableVertexAttribArray(POSITION_LOC);
 
-   // Bind the index buffer
-   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, userData->groundIndicesIBO);
-
-   // Load the MVP matrix for the ground model
-   glUniformMatrix4fv(userData->shadowMapMvpLoc, 1, GL_FALSE, (GLfloat*)& userData->groundMvpMatrix.m[0][0]);
-   glUniformMatrix4fv(userData->shadowMapMvpLightLoc, 1, GL_FALSE, (GLfloat*)& userData->groundMvpLightMatrix.m[0][0]);
-
-   // Set the ground color to light gray
-   glVertexAttrib4f(COLOR_LOC, 0.9f, 0.9f, 0.9f, 1.0f);
-
-   glDrawElements(GL_TRIANGLES, userData->groundNumIndices, GL_UNSIGNED_INT, (const void*)NULL);
-
-   // Draw the cube
-   // Load the vertex position
-   glBindBuffer(GL_ARRAY_BUFFER, userData->cubePositionVBO);
-   glVertexAttribPointer(POSITION_LOC, 3, GL_FLOAT,
-	   GL_FALSE, 3 * sizeof(GLfloat), (const void*)NULL);
-   glEnableVertexAttribArray(POSITION_LOC);
-
-   // Bind the index buffer
-   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, userData->cubeIndicesIBO);
-
-   // Load the MVP matrix for the cube model
-   glUniformMatrix4fv(userData->shadowMapMvpLoc, 1, GL_FALSE, (GLfloat*)& userData->cubeMvpMatrix.m[0][0]);
-   glUniformMatrix4fv(userData->shadowMapMvpLightLoc, 1, GL_FALSE, (GLfloat*)& userData->cubeMvpLightMatrix.m[0][0]);
-
-   // Set the cube color to red
-   glVertexAttrib4f(COLOR_LOC, 1.0f, 0.0f, 0.0f, 1.0f);
-
-   glDrawElements(GL_TRIANGLES, userData->cubeNumIndices, GL_UNSIGNED_INT, (const void*)NULL);
-
-   // end
-
-
-
-
-
-
-   glDisable( GL_POLYGON_OFFSET_FILL );
 
    // SECOND PASS: Render the scene from eye location using the shadow map texture created in the first pass
    glBindFramebuffer ( GL_FRAMEBUFFER, defaultFramebuffer );
